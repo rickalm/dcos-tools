@@ -1,0 +1,21 @@
+docker rm -f slave
+
+[ "$1" == "dev" ] && dev=_dev && shift
+
+case $1 in
+ 0*) dev=_$1; shift;;
+ dev) dev=_$1; shift;;
+esac
+
+[ -z "$1" ] & d=-d
+docker run --privileged=true -it --net=host --name slave $d \
+  -v /var/lib/mesos-slave:/data \
+  -v /var/lib/mesos-slave/var/lib/docker:/var/lib/docker \
+  -v $(pwd)/telegraf.conf:/telegraf.conf \
+  -e 'EXHIBITOR_ADDRESS=127.0.0.1' \
+  rickalm/dcos:1.7_aws_slave${dev} $@
+
+#docker exec -it slave watch -n 0.2 --diff 'systemctl -a | grep dcos | cut -b1-120 | sort -k3,3 -k1,1'
+docker exec -it slave /watch_services.sh
+docker exec -it slave /bin/bash
+

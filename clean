@@ -1,0 +1,8 @@
+docker volume ls -q | xargs docker volume rm
+docker volume ls -q | xargs docker volume rm
+docker volume ls -q | xargs docker volume rm
+docker volume ls -q | xargs docker volume rm
+docker images | grep none | awk '{print $3}' | xargs docker rmi
+docker images | grep none | awk '{print $3}' | xargs docker rmi
+docker images | grep none | awk '{print $3}' | xargs docker rmi
+docker images | grep none | awk '{print $3}' | xargs docker rmi
