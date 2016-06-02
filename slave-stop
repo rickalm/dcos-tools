@@ -1,1 +1,0 @@
-eval $(grep "^docker rm" slave-run | tail -1)

@@ -1,35 +1,47 @@
 #!/usr/bin/env bash
 
+tasks="master slave influx"
+actions="start stop kill exec run watch"
+
 dname=$(basename ${0%\-*})
 
 # Create all my clones
 #
-for s in start stop kill exec run; do
-  [ ! -f ${dname}-${s} ] && ln -s $(readlink -f $0) ${dname}-${s}
-done
+if [ "${dname}" == "_exec" ]; then
+  for task in ${tasks}; do
+    ln -sf $(readlink -f $0) $(dirname $0)/${task}
+    for action in ${actions}; do
+      [ ! -f ${task}-${action} ] && ln -sf $(readlink -f $(dirname $0)/${task}) $(dirname $0)/${task}-${action}
+    done
+  done
+  exit 0
+fi
 
-# Handle our clone names
+# Handle our action
 #
 case $0 in
   *-exec)   exec docker exec -it ${dname} bash;;
   *-stop)   exec docker stop ${dname};;
   *-kill)   exec docker rm -f ${dname};;
-  *-exec)   exec docker exec -it ${dname} watch systemctl -a;;
-  *-run)    $(dirname $0)/${dname}-kill
+  *-watch)   exec docker exec -it ${dname} watch systemctl -a;;
+  *-run)    $(dirname $0)/${dname}-kill;;
+  *)        exit;;
 esac
 
 # If the first param is a rev tag, then use is
 #
 case $1 in
-  dev)      rev=_dev; shift;;
-  0*)       rev=_$1; shift;;
+  dev)      rev=-dev; shift;;
+  0*)       rev=-$1; shift;;
 esac
+
+[ -z "${rev}" ] && rev=-dev
 
 # If there are args, then launch interactive
 # otherwise, launch daemon
 #        
 [ -z "$1" ] && mode=-d
-[ -n "$1" ] && mode=-it --rm
+[ -n "$1" ] && mode="-it --rm"
 mode=-d
 
 case $dname in
@@ -49,6 +61,12 @@ case $dname in
               -e 'MESOS_CLUSTER=RickTest' \
               rickalm/dcos:1.7_aws_master${rev} $@
             ;;
+
+  slave)    docker run --privileged=true --net=host --name slave ${mode} \
+              -v /var/lib/mesos-slave:/data \
+              rickalm/dcos:1.7_aws_slave${rev} $@
+            ;;
+
 esac
 
 exit

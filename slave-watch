@@ -1,1 +1,0 @@
-eval $(grep "watch" slave-run | tail -1)
