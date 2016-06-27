@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-tasks="master slave influx"
-actions="start stop kill exec run watch"
+tasks="master slave influxi dns"
+actions="start stop kill exec run watch log"
 
 dname=$(basename ${0%\-*})
 
@@ -22,8 +22,9 @@ fi
 case $0 in
   *-exec)   exec docker exec -it ${dname} bash;;
   *-stop)   exec docker stop ${dname};;
+  *-log)    exec docker logs ${dname};;
   *-kill)   exec docker rm -f ${dname};;
-  *-watch)   exec docker exec -it ${dname} watch systemctl -a;;
+  *-watch)  exec docker exec -it ${dname} bash -c 'TERM=xterm && watch --diff \\'systemctl -a \| cut -b1-120 \| grep \\.service \| grep loaded \| grep -v systemd \| sort -k3,3 \\' ';;
   *-run)    $(dirname $0)/${dname}-kill;;
   *)        exit;;
 esac
@@ -59,12 +60,19 @@ case $dname in
   master)   docker run --privileged=true --net=host --name master ${mode} \
               -v /var/lib/mesos-master:/data \
               -e 'MESOS_CLUSTER=RickTest' \
-              rickalm/dcos:1.7_aws_master${rev} $@
+              uptake/dcos:1.7_aws_master${rev} $@
             ;;
 
   slave)    docker run --privileged=true --net=host --name slave ${mode} \
               -v /var/lib/mesos-slave:/data \
-              rickalm/dcos:1.7_aws_slave${rev} $@
+              -e 'EXHIBITOR_ADDRESS=127.0.0.1' \
+              uptake/dcos:1.7_aws_slave${rev} $@
+            ;;
+
+  dns)      docker run --privileged=true --net=host --name dns ${mode} \
+              -v /var/lib/mesos-dns:/data \
+              -e 'EXHIBITOR_ADDRESS=127.0.0.1' \
+              uptake/dcos:1.7_aws_dns${rev} $@
             ;;
 
 esac
