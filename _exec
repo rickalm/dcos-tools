@@ -60,19 +60,19 @@ case $dname in
   master)   docker run --privileged=true --net=host --name master ${mode} \
               -v /var/lib/mesos-master:/data \
               -e 'MESOS_CLUSTER=RickTest' \
-              uptake/dcos:1.7_aws_master${rev} $@
+              rickalm/dcos:1.7_aws_master${rev} $@
             ;;
 
   slave)    docker run --privileged=true --net=host --name slave ${mode} \
               -v /var/lib/mesos-slave:/data \
               -e 'EXHIBITOR_ADDRESS=127.0.0.1' \
-              uptake/dcos:1.7_aws_slave${rev} $@
+              rickalm/dcos:1.7_aws_slave${rev} $@
             ;;
 
   dns)      docker run --privileged=true --net=host --name dns ${mode} \
               -v /var/lib/mesos-dns:/data \
               -e 'EXHIBITOR_ADDRESS=127.0.0.1' \
-              uptake/dcos:1.7_aws_dns${rev} $@
+              rickalm/dcos:1.7_aws_dns${rev} $@
             ;;
 
 esac
